@@ -5,6 +5,12 @@ on:
     branches: [ master ]
   workflow_dispatch:
 
+permissions:
+  contents: write
+
+env:
+  USBPD_RELEASE_TAG: usbpd-test-v1
+
 jobs:
   build:
     name: build patched boot image
@@ -23,10 +29,30 @@ jobs:
       - name: Build signed kernel image
         run: ./build_kernel.sh
 
+      - name: Record boot image checksum
+        run: |
+          cd output
+          sha256sum boot.img | tee boot.img.sha256
+
       - name: Upload boot image
         uses: actions/upload-artifact@v4
         with:
           name: carrot-usbpd-boot
-          path: output/boot.img
+          path: |
+            output/boot.img
+            output/boot.img.sha256
           if-no-files-found: error
           compression-level: 0
+
+      - name: Publish replaceable test release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if ! gh release view "$USBPD_RELEASE_TAG" >/dev/null 2>&1; then
+            gh release create "$USBPD_RELEASE_TAG" \
+              --title "Carrot USB-PD kernel test v1" \
+              --notes "Experimental AGNOS 19.6 boot image with the USB-PD Capability Mismatch fix. Install only through the guarded carrot-egpu-usbpd trial script." \
+              --prerelease
+          fi
+          gh release upload "$USBPD_RELEASE_TAG" \
+            output/boot.img output/boot.img.sha256 --clobber
