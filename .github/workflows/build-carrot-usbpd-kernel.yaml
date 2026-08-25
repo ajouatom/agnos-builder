@@ -1,0 +1,32 @@
+name: build carrot USB-PD kernel
+
+on:
+  push:
+    branches: [ master ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: build patched boot image
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 60
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          lfs: true
+          submodules: true
+
+      - name: Apply USB-PD capability mismatch fix
+        run: git -C agnos-kernel-sdm845 apply ../patches/usb-pd-capability-mismatch.patch
+
+      - name: Build signed kernel image
+        run: ./build_kernel.sh
+
+      - name: Upload boot image
+        uses: actions/upload-artifact@v4
+        with:
+          name: carrot-usbpd-boot
+          path: output/boot.img
+          if-no-files-found: error
+          compression-level: 0

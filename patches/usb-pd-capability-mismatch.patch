@@ -1,0 +1,39 @@
+From: CarrotPilot <ajouatom@gmail.com>
+Subject: [PATCH] usb: pd: accept capability mismatch current requests
+
+USB PD sinks may set Capability Mismatch and place their desired maximum
+current above the selected source PDO in the RDO.  The actual operating
+current must remain within the advertised source limit, but the desired
+maximum is allowed to exceed it when Capability Mismatch is set.
+
+The existing Qualcomm policy engine rejects both fields unconditionally.
+That causes hubs requesting 1.5 A operating / 3 A desired maximum from the
+1.5 A comma source to loop on Reject with RDO 0x1702592c.
+
+Match the validation used by the upstream Linux TCPM policy engine.
+
+diff --git a/drivers/usb/pd/policy_engine.c b/drivers/usb/pd/policy_engine.c
+index 6685f05..6f1774b 100644
+--- a/drivers/usb/pd/policy_engine.c
++++ b/drivers/usb/pd/policy_engine.c
+@@ -1196,11 +1196,18 @@ static void usbpd_set_state(struct usbpd *pd, enum usbpd_state next_state)
+ 		break;
+ 
+ 	case PE_SRC_NEGOTIATE_CAPABILITY:
++		/*
++		 * A sink that cannot be fully satisfied may set Capability Mismatch
++		 * and report its desired maximum current above the selected source
++		 * PDO.  Accept that standards-compliant request as long as the actual
++		 * operating current stays within our advertised 1.5 A limit.
++		 */
+ 		if (PD_RDO_OBJ_POS(pd->rdo) != 1 ||
+ 			PD_RDO_FIXED_CURR(pd->rdo) >
+ 				PD_SRC_PDO_FIXED_MAX_CURR(*default_src_caps) ||
+-			PD_RDO_FIXED_CURR_MINMAX(pd->rdo) >
+-				PD_SRC_PDO_FIXED_MAX_CURR(*default_src_caps)) {
++			(PD_RDO_FIXED_CURR_MINMAX(pd->rdo) >
++				PD_SRC_PDO_FIXED_MAX_CURR(*default_src_caps) &&
++			 !PD_RDO_MISMATCH(pd->rdo))) {
+ 			/* send Reject */
+ 			ret = pd_send_msg(pd, MSG_REJECT, NULL, 0, SOP_MSG);
+ 			if (ret) {
