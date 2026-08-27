@@ -3,6 +3,8 @@ name: build carrot C3 AGNOS 19.6 boot
 on:
   push:
     branches: [ carrot-c3-19.6 ]
+    paths-ignore:
+      - .github/workflows/build-carrot-c3-boot.yaml
   workflow_dispatch:
 
 permissions:
@@ -49,15 +51,21 @@ jobs:
         xz -T0 -9 "output/${RELEASE_ASSET%.xz}"
         raw_hash=$(sha256sum output/boot.img | awk '{print $1}')
         raw_size=$(stat -c '%s' output/boot.img)
+        padding_size=$(( (4096 - raw_size % 4096) % 4096 ))
+        ondevice_hash=$( { cat output/boot.img; head -c "$padding_size" /dev/zero; } | sha256sum | awk '{print $1}')
         compressed_hash=$(sha256sum "output/$RELEASE_ASSET" | awk '{print $1}')
         printf '%s  boot.img\n' "$raw_hash" > output/boot.img.sha256
+        printf '%s  boot.img (4KiB padded)\n' "$ondevice_hash" > output/boot.img.ondevice.sha256
         printf '%s  %s\n' "$compressed_hash" "$RELEASE_ASSET" > output/boot.img.xz.sha256
         printf '%s\n' "$raw_size" > output/boot.img.size
         jq -n \
           --arg url "https://github.com/${GITHUB_REPOSITORY}/releases/download/${RELEASE_TAG}/${RELEASE_ASSET}" \
           --arg hash "$raw_hash" \
+          --arg hash_raw "$raw_hash" \
+          --arg ondevice_hash "$ondevice_hash" \
           --argjson size "$raw_size" \
-          '{url: $url, hash: $hash, size: $size}' > output/agnos-boot-manifest-entry.json
+          '{url: $url, hash: $hash, hash_raw: $hash_raw, size: $size, ondevice_hash: $ondevice_hash}' \
+          > output/agnos-boot-manifest-entry.json
 
     - name: Upload verification artifact
       uses: actions/upload-artifact@v4
@@ -66,6 +74,7 @@ jobs:
         path: |
           output/${{ env.RELEASE_ASSET }}
           output/boot.img.sha256
+          output/boot.img.ondevice.sha256
           output/boot.img.xz.sha256
           output/boot.img.size
           output/agnos-boot-manifest-entry.json
@@ -85,6 +94,7 @@ jobs:
         gh release upload "$RELEASE_TAG" \
           "output/$RELEASE_ASSET" \
           output/boot.img.sha256 \
+          output/boot.img.ondevice.sha256 \
           output/boot.img.xz.sha256 \
           output/boot.img.size \
           output/agnos-boot-manifest-entry.json \
