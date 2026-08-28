@@ -61,16 +61,17 @@ jobs:
             exit 1
           fi
 
+      - name: Build signed kernel image
+        run: ./build_kernel.sh
+
       - name: Verify C3 boot support
         if: matrix.c3_boot
         run: |
-          grep -q '^CONFIG_PCI=y$' agnos-kernel-sdm845/arch/arm64/configs/tici_defconfig
-          grep -q '^CONFIG_PCI_MSM=y$' agnos-kernel-sdm845/arch/arm64/configs/tici_defconfig
-          grep -q '^CONFIG_NVME_CORE=y$' agnos-kernel-sdm845/arch/arm64/configs/tici_defconfig
-          grep -q '^CONFIG_BLK_DEV_NVME=y$' agnos-kernel-sdm845/arch/arm64/configs/tici_defconfig
-
-      - name: Build signed kernel image
-        run: ./build_kernel.sh
+          grep -a -q 'comma tici' output/boot.img
+          grep -q '^CONFIG_PCI=y$' agnos-kernel-sdm845/out/.config
+          grep -q '^CONFIG_PCI_MSM=y$' agnos-kernel-sdm845/out/.config
+          grep -q '^CONFIG_NVME_CORE=y$' agnos-kernel-sdm845/out/.config
+          grep -q '^CONFIG_BLK_DEV_NVME=y$' agnos-kernel-sdm845/out/.config
 
       - name: Record image provenance
         env:
