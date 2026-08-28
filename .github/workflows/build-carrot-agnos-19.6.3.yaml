@@ -31,11 +31,6 @@ jobs:
       - name: Set custom AGNOS version
         run: printf '%s' "$AGNOS_VERSION" > VERSION
 
-      - name: Build common system image
-        env:
-          GIT_HASH: ${{ github.sha }}
-        run: ./build_system.sh
-
       - name: Apply and verify C3X/C4 USB-PD patches
         run: |
           git -C agnos-kernel-sdm845 apply --check ../patches/c4-usbpd-v2.patch
@@ -50,6 +45,11 @@ jobs:
         run: |
           ./build_kernel.sh
           mv output/boot.img output/boot-c3x-c4.img
+
+      - name: Build common system image
+        env:
+          GIT_HASH: ${{ github.sha }}
+        run: ./build_system.sh
 
       - name: Reset kernel source for C3 build
         run: |
