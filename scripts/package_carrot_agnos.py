@@ -77,10 +77,13 @@ def package_boot(path: Path, output_dir: Path, device_group: str, base_url: str)
   ondevice.update(b"\x00" * padding)
 
   asset = f"boot-{device_group}-{raw_hash}.img.xz"
-  compress(path, output_dir / asset)
+  compressed_path = output_dir / asset
+  compress(path, compressed_path)
   return {
     "name": "boot",
     "url": f"{base_url}/{asset}",
+    "compressed_hash": checksum(compressed_path),
+    "compressed_size": compressed_path.stat().st_size,
     "hash": raw_hash,
     "hash_raw": raw_hash,
     "size": raw_size,
@@ -94,10 +97,13 @@ def package_boot(path: Path, output_dir: Path, device_group: str, base_url: str)
 def package_system(path: Path, output_dir: Path, base_url: str) -> dict:
   sparse_hash, ondevice_hash, raw_size = sparse_hashes(path)
   asset = f"system-{sparse_hash}.img.xz"
-  compress(path, output_dir / asset)
+  compressed_path = output_dir / asset
+  compress(path, compressed_path)
   return {
     "name": "system",
     "url": f"{base_url}/{asset}",
+    "compressed_hash": checksum(compressed_path),
+    "compressed_size": compressed_path.stat().st_size,
     "hash": checksum(path),
     "hash_raw": sparse_hash,
     "size": raw_size,
