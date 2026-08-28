@@ -96,7 +96,7 @@ jobs:
           printf 'kernel_base=%s\n' "$(git -C agnos-kernel-sdm845 rev-parse HEAD)" >> output/carrot-ota/PROVENANCE
           printf 'agnos_version=%s\n' "$AGNOS_VERSION" >> output/carrot-ota/PROVENANCE
           printf 'openpilot_manifest_commit=%s\n' "$OPENPILOT_MANIFEST_COMMIT" >> output/carrot-ota/PROVENANCE
-          sha256sum output/carrot-ota/PROVENANCE >> output/carrot-ota/SHA256SUMS
+          (cd output/carrot-ota && sha256sum PROVENANCE >> SHA256SUMS)
           ls -lh output/carrot-ota
 
       - name: Upload verification artifact
