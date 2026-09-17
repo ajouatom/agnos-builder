@@ -58,6 +58,8 @@ systemctl disable multipathd.socket
 systemctl disable chgrp-diag.service
 systemctl disable lvm2-monitor.service
 systemctl mask systemd-backlight@.service
+systemctl mask alsa-restore.service
+ln -s /dev/null /etc/udev/rules.d/90-alsa-restore.rules
 systemctl disable dpkg-db-backup.timer
 systemctl disable ua-reboot-cmds.service
 systemctl disable ubuntu-advantage.service
@@ -85,3 +87,7 @@ systemctl disable smartd.service
 
 systemctl disable console-setup.service
 systemctl disable sfsconfig.service
+
+# Opt-in native Bluetooth trial; inactive unless /data/bluetooth/ENABLED exists.
+systemctl enable carrot-bluetooth-radio.service
+systemctl disable bluetooth.service
