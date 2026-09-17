@@ -55,6 +55,8 @@ apt-fast install --no-install-recommends -yq \
     alsa-utils \
     apport-retrace \
     bc \
+    bluez \
+    rfkill \
     build-essential \
     bzip2 \
     curl \

@@ -149,6 +149,11 @@ COPY ./userspace/files/serial-getty@ttyMSM0_override.conf /lib/systemd/system/se
 COPY ./userspace/files/ssh_override.conf /lib/systemd/system/ssh.service.d/override.conf
 COPY ./userspace/firmware/* /lib/firmware/
 
+# Native Bluetooth: persistent pairing state is mounted by bluetooth-radio.
+RUN mkdir -p /lib/firmware/qca
+COPY ./userspace/files/bluetooth-main.conf /etc/bluetooth/main.conf
+COPY ./userspace/files/carrot-bluetooth.conf /etc/dbus-1/system.d/carrot-bluetooth.conf
+
 # populate /etc
 COPY ./userspace/files/fstab /etc
 COPY ./userspace/files/profile /etc/profile
