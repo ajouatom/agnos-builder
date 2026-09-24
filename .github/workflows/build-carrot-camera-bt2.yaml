@@ -59,10 +59,11 @@ jobs:
           mv output/boot.img output/boot-c3x-c4.img
           python3 scripts/check_bluetooth_trial.py --kernel-config agnos-kernel-sdm845/out/.config
 
-      - name: Build common system image
-        env:
-          GIT_HASH: ${{ github.sha }}
-        run: ./build_system.sh
+      - name: Derive common system image from immutable bt1 userspace
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y android-sdk-libsparse-utils e2fsprogs
+          python3 scripts/build_frozen_bt2_system.py
 
       - name: Reset kernel source for C3 build
         run: |
@@ -120,6 +121,8 @@ jobs:
           printf 'kernel_base=%s\n' "$(git -C agnos-kernel-sdm845 rev-parse HEAD)" >> output/carrot-ota/PROVENANCE
           printf 'agnos_version=%s\n' "$AGNOS_VERSION" >> output/carrot-ota/PROVENANCE
           printf 'openpilot_manifest_commit=%s\n' "$OPENPILOT_MANIFEST_COMMIT" >> output/carrot-ota/PROVENANCE
+          printf 'system_base_release=%s\n' 'agnos-19.8-carrot-bt1' >> output/carrot-ota/PROVENANCE
+          printf 'system_base_raw_sha256=%s\n' '375c5d22335770ac08750660bb5b29a3331c550d6a9875b35f36b88af792ea44' >> output/carrot-ota/PROVENANCE
           (cd output/carrot-ota && sha256sum PROVENANCE >> SHA256SUMS)
           cp patches/CAMERA_BT2.md output/carrot-ota/BLUETOOTH.md
           (cd output/carrot-ota && sha256sum BLUETOOTH.md >> SHA256SUMS)

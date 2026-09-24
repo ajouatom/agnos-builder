@@ -8,6 +8,13 @@ Base: builder f5b3f77e59f1917f95e0752630ca08050463eede (19.8-carrot-bt1),
 kernel eccd146599f2e2f159d951092642689bede91632. Existing BT, USB-PD,
 C3 PCIe patches, GPU firmware, radio startup and scheduling are retained.
 
+To avoid changes from unpinned apt repositories, the system image is derived
+from the immutable bt1 release asset, verifying its compressed, sparse and raw
+SHA256 values. Only /VERSION and /BUILD are replaced. Target libraries, services
+and firmware stay byte-identical to that base. Host build utilities do not
+become part of the target image. Filesystem metadata will also change as the
+two version files are rewritten.
+
 The extra patch routes raw Qualcomm ACL handle/flags 0x2edc through
 `hci_recv_diag`, preserving monitor visibility, instead of treating it as an
 ordinary connection handle 3804. All other ACL traffic follows the original
