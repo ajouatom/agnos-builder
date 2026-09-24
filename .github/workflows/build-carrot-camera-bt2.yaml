@@ -48,6 +48,8 @@ jobs:
           git -C agnos-kernel-sdm845 apply --check ../patches/bluetooth-qca-diagnostics.patch
           git -C agnos-kernel-sdm845 apply ../patches/bluetooth-qca-diagnostics.patch
           python3 scripts/check_qca_diagnostics.py
+          git -C agnos-kernel-sdm845 apply --check ../patches/camera-sof-history-trace.patch
+          git -C agnos-kernel-sdm845 apply ../patches/camera-sof-history-trace.patch
           bash -n userspace/usr/comma/bluetooth-radio
           python3 scripts/check_bluetooth_trial.py
 
@@ -83,6 +85,8 @@ jobs:
           git -C agnos-kernel-sdm845 apply --check ../patches/bluetooth-qca-diagnostics.patch
           git -C agnos-kernel-sdm845 apply ../patches/bluetooth-qca-diagnostics.patch
           python3 scripts/check_qca_diagnostics.py
+          git -C agnos-kernel-sdm845 apply --check ../patches/camera-sof-history-trace.patch
+          git -C agnos-kernel-sdm845 apply ../patches/camera-sof-history-trace.patch
 
       - name: Build and verify C3/C3 clone boot image
         run: |

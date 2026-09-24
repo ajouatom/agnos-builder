@@ -22,6 +22,19 @@ establishes misclassification, not the cause of the occasional 96-102 ms
 camera SOF-path gaps. Diagnostic packets still consume UART/workqueue time.
 Compile success is not C3/C4 hardware or camera validation.
 
+This trial also adds two disabled-by-default tracepoints under `camera`:
+`cam_csid_sof_history` reads the previous SOF register and verifies the current
+register did not change during the sample, and `cam_ife_irq_payload` exposes
+the IRQ-captured timestamp/status at bottom-half entry. Additional MMIO reads
+occur only while the history tracepoint is enabled. The existing SOF timestamp,
+frame/request acceptance, error recovery and scheduling remain unchanged.
+
+Validate previous-register semantics on normal frames first. Discard samples
+whose current and verification timestamps differ; never interpret a torn
+sample as a lost physical frame. A previous hardware timestamp between two
+observed callbacks can establish an intervening hardware SOF. A missing
+intermediate timestamp alone does not diagnose sensor, FSIN or CSI hardware.
+
 Before a vehicle trial record build/boot slot, BT connection and model runtime;
 afterwards verify diagnostic monitor classification, HID, reconnect, camera
 SOF/receive timing, model gaps and pose validity. Preserve pairing state.
